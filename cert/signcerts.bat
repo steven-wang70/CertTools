@@ -1,6 +1,7 @@
 REM openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout privateKey1.key -out certificate1.crt -subj "/C=CA/ST=Ontario/L=Waterloo/O=MyCompany/CN=mycompany.com"
 
 REM See: https://blogg.bekk.no/how-to-sign-a-certificate-request-with-openssl-e046c933d3ae
+REM See: https://www.openssl.org/docs/man1.0.2/
 
 mkdir root
 cd root
