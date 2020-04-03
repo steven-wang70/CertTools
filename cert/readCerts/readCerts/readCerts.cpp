@@ -4,13 +4,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <sstream>
-#include <iostream>
 
 #include "openssl/bio.h"
-#include <openssl/crypto.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/pkcs12.h>
+#include "openssl/crypto.h"
+#include "openssl/err.h"
+#include "openssl/pem.h"
+#include "openssl/pkcs12.h"
 
 static int dump_certs_p12(BIO *out, PKCS12 *p12, char *pass);
 static int dump_certs_bags(BIO *out, STACK_OF(PKCS12_SAFEBAG) *bags);
@@ -21,16 +20,16 @@ static int dump_cert_text(BIO *out, X509 *x);
 BIO *bio_err = NULL;
 BIO *bio_out = NULL;
 
-std::stringstream outs;
-std::stringstream errs;
-
 const int DEFAULT_PASS_LENGTH = -1;
 const int DUMP_SUCCESS = 1;
 const int DUMP_FAILED = 0;
 
+#if defined(_WIN64)
 // Workaround methods on Windows because it could not print to stdout/stderr using 
 // either C++ iostream, C stream IO, or BIO of OpenSSL. 
 // Since this is not the focus, I prefer to workaround it temporarily.
+std::stringstream outs;
+std::stringstream errs;
 static int WORKAROUND_BIO_printf(BIO *out, const char *format, ...)
 {
 	char buffer[1000];
@@ -65,6 +64,10 @@ static int WORKAROUND_BIO_puts(BIO *out, const char *buffer)
 
 	return 0;
 }
+#elif defined(__linux__)
+#define WORKAROUND_BIO_printf BIO_printf
+#define WORKAROUND_BIO_puts BIO_puts
+#endif
 
 // In this test application, for simplicity, we are using a single password for all challenges.
 int main(int argc, char* argv[])
