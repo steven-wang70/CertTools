@@ -19,7 +19,7 @@ REM Create a self-signed X509 certificate for the CA (the CSR will be signed wit
 openssl req -new -x509 -days 10000 -passin pass:123456 -key root/root.key -out root/root.crt -subj "/C=CA/ST=Ontario/L=Waterloo/O=MyCompany/CN=mycompany.com"
 
 REM Create CSR
-openssl req -new -newkey rsa:1024 -nodes -keyout mykey.pem -out myreq.pem -subj "/C=CA/ST=Ontario/L=Waterloo/O=MyCompany/CN=yourcompany.com"
+openssl req -new -newkey rsa:1024 -nodes -keyout mykey.pem -out myreq.pem -subj "/C=CA/ST=Ontario/L=Waterloo/O=YourCompany/CN=yourcompany.com"
 
 REM Sign CSR
 openssl ca -config root.conf -batch -passin pass:123456 -out mycert.crt -infiles myreq.pem
@@ -34,3 +34,5 @@ openssl pkcs12 -export -passin pass:123456 -passout pass:123456 -out certificate
 
 REM Dump out all certificates and keys, which show who is the subject and who is the issuer.
 openssl pkcs12 -passin pass:123456 -passout pass:123456 -in certificate.pfx
+
+openssl x509 -noout -fingerprint -sha256 -inform pem -in mycert.crt
