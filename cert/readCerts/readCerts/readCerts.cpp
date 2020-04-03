@@ -39,7 +39,8 @@ int WORKAROUND_printf(BIO *out, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	int ret = BIO_vprintf(out, format, args);
+//	int ret = BIO_vprintf(out, format, args);
+	int ret = vfprintf((out == bio_err ? stderr : stdout), format, args);
 	va_end(args);
 
 	return ret;
@@ -47,7 +48,8 @@ int WORKAROUND_printf(BIO *out, const char *format, ...)
 
 int WORKAROUND_puts(BIO *out, const char *buffer)
 {
-	WORKAROUND_puts(out, buffer);
+//	return BIO_puts(out, buffer);
+	return fputs(buffer, (out == bio_err ? stderr : stdout));
 }
 
 int main()
@@ -99,7 +101,7 @@ int main()
     }
 
 
-
+	fflush(stdout);
     BIO_free(in);
     return 0;
 }
@@ -154,7 +156,7 @@ int dump_certs_pkeys_bags(BIO *out, STACK_OF(PKCS12_SAFEBAG) *bags,
 {
     int i;
     for (i = 0; i < sk_PKCS12_SAFEBAG_num(bags); i++) {
-        if (!dump_certs_pkeys_bag(out,
+        if (dump_certs_pkeys_bag(out,
                                   sk_PKCS12_SAFEBAG_value(bags, i),
                                   pass, passlen, options, pempass))
             return 0;
