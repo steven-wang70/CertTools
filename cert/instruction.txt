@@ -1,0 +1,8 @@
+For Linux:
+1. sudo apt install perl gcc make g++
+2. Download the source code openssl-1.0.2e, build it.
+
+For Windows:
+1. Download the release packages of openssl-1.0.2e which includes both executable, headers and libraries;
+2. The source code contains workaround for output since we could not build the binary of openssl byourselves.
+
