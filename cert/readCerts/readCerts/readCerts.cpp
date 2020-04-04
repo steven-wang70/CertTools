@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sstream>
 
 #include "openssl/bio.h"
 #include "openssl/crypto.h"
@@ -25,11 +24,24 @@ const int DUMP_SUCCESS = 1;
 const int DUMP_FAILED = 0;
 
 #if defined(_WIN64)
-// Workaround methods on Windows because it could not print to stdout/stderr using 
-// either C++ iostream, C stream IO, or BIO of OpenSSL. 
+// Workaround methods on Windows because it could not print to BIO of OpenSSL. 
 // Since this is not the focus, I prefer to workaround it temporarily.
-std::stringstream outs;
-std::stringstream errs;
+// The OpenSSL DLL is not built in the same verion of this tool, which may be the cause.
+
+static int WORKAROUND_BIO_puts(BIO *out, const char *buffer)
+{
+	if (out == bio_out)
+	{
+		fputs(buffer, stdout);
+	}
+	else
+	{
+		fputs(buffer, stderr);
+	}
+
+	return 0;
+}
+
 static int WORKAROUND_BIO_printf(BIO *out, const char *format, ...)
 {
 	char buffer[1000];
@@ -39,30 +51,7 @@ static int WORKAROUND_BIO_printf(BIO *out, const char *format, ...)
 	vsprintf_s(buffer, format, args);
 	va_end(args);
 
-	if (out == bio_out)
-	{
-		outs << buffer;
-	}
-	else
-	{
-		errs << buffer;
-	}
-
-	return 0;
-}
-
-static int WORKAROUND_BIO_puts(BIO *out, const char *buffer)
-{
-	if (out == bio_out)
-	{
-		outs << buffer;
-	}
-	else
-	{
-		errs << buffer;
-	}
-
-	return 0;
+	return WORKAROUND_BIO_puts(out, buffer);
 }
 #elif defined(__linux__)
 #define WORKAROUND_BIO_printf BIO_printf
@@ -114,13 +103,13 @@ int main(int argc, char* argv[])
 	WORKAROUND_BIO_printf(bio_err, "MAC verified OK\n");
 
 	// Traverse p12 keystore to dump certificates.
-    if (!dump_certs_p12(bio_out, p12, password)) {
+	if (!dump_certs_p12(bio_out, p12, password)) {
         WORKAROUND_BIO_printf(bio_err, "Error outputting certificates\n");
         ERR_print_errors(bio_err);
 		return 5;
     }
 
-    BIO_free(in);
+	BIO_free(in);
     return 0;
 }
 
@@ -192,7 +181,6 @@ static int dump_certs_bag(BIO *out, PKCS12_SAFEBAG *bag)
 		if (!x509) return DUMP_FAILED;
 
 		dump_cert_text(out, x509);
-		PEM_write_bio_X509(out, x509);
 		X509_free(x509);
 	}
 
